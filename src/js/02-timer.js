@@ -1,0 +1,104 @@
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
+const startButton = document.querySelector('[data-start]');
+const countdownTimer = document.querySelector('.timer');
+
+let countdownInterval;
+let isTimerRunning = false;
+
+const storedCountdownTime = localStorage.getItem('countdownTime');
+if (storedCountdownTime) {
+  const countdownTime = parseInt(storedCountdownTime);
+  if (countdownTime > Date.now()) {
+    startCountdown(countdownTime);
+  }
+}
+
+flatpickr('#datetime-picker', {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    console.log(selectedDates[0]);
+    const selectedDate = selectedDates[0];
+    const currentDate = new Date();
+
+    if (selectedDate <= currentDate) {
+      window.alert('Please choose a date in the future');
+      startButton.disabled = true;
+    } else {
+      startButton.disabled = false;
+    }
+  },
+});
+
+startButton.addEventListener('click', startCountdown);
+
+function startCountdown() {
+  if (isTimerRunning) {
+    return;
+  }
+
+  const selectedDate = flatpickr.parseDate(
+    document.querySelector('#datetime-picker').value
+  );
+  const currentDate = new Date();
+  const countdownTime = selectedDate.getTime() - currentDate.getTime();
+
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(updateCountdown, 1000);
+
+  isTimerRunning = true;
+
+  updateCountdown();
+
+  function updateCountdown() {
+    const timeLeft = countdownTime - (Date.now() - currentDate.getTime());
+
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      countdownTimer.textContent = '00:00:00:00';
+      startButton.style.display = 'none';
+      return;
+    }
+
+    function addLeadingZero(value) {
+      return value.toString().padStart(2, '0');
+    }
+
+    const { days, hours, minutes, seconds } = convertMs(timeLeft);
+    const formattedTime = `${addLeadingZero(days)}:${addLeadingZero(
+      hours
+    )}:${addLeadingZero(minutes)}:${addLeadingZero(seconds)}`;
+
+    countdownTimer.textContent = formattedTime;
+
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+    }
+  }
+}
+
+function convertMs(ms) {
+  const second = 1000;
+  const minute = second * 60;
+  const hour = minute * 60;
+  const day = hour * 24;
+
+  const days = Math.floor(ms / day);
+  const hours = Math.floor((ms % day) / hour);
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+
+  return { days, hours, minutes, seconds };
+}
+
+console.log(convertMs(2000));
+console.log(convertMs(140000));
+console.log(convertMs(24140000));
+
+function addLeadingZero(value) {
+  return value.toString().padStart(2, '0');
+}
