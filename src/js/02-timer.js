@@ -106,6 +106,3 @@ function renderDate(formatDate) {
   hoursRef.textContent = addLeadingZero(formatDate.hours);
   daysRef.textContent = addLeadingZero(formatDate.days);
 }
-function addLeadingZero(value) {
-  return value.toString().padStart(2, '0');
-}
